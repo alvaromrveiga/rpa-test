@@ -45,6 +45,8 @@ async function getMapCanvas(driver: WebDriver): Promise<WebElement> {
 
   await driver.wait(until.elementIsEnabled(canvas), 5000);
 
+  await makeCanvasVisibleWhenHeadless(driver, canvas);
+
   return canvas;
 }
 
@@ -92,11 +94,20 @@ async function clickOnSatelliteViewButton(
 
   const actions = driver.actions({ async: true });
   await actions
-    .move({
-      origin: canvas,
-      x: satelliteButtonX,
-      y: satelliteButtonY,
-    })
+    .move({ origin: canvas, x: satelliteButtonX, y: satelliteButtonY })
     .click()
     .perform();
+}
+
+async function makeCanvasVisibleWhenHeadless(
+  driver: WebDriver,
+  canvas: WebElement
+) {
+  const canvasStyle = await canvas.getAttribute("style");
+  const canvasStyleDisplayInline = canvasStyle.replace("none", "inline");
+
+  await driver.executeScript(
+    `arguments[0].setAttribute('style', '${canvasStyleDisplayInline}')`,
+    canvas
+  );
 }
