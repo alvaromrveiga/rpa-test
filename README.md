@@ -8,9 +8,20 @@
 
 ## 📑 Índice
 <!--ts-->
+   * [📚 Demo](#-demo)
    * [🔧 Instalação](#-instalação)
    * [💻 Tecnologias](#-tecnologias)
 <!--te-->
+
+## 📚 Demo
+
+<p align="center">
+  <h3>Headless</h3>
+  <img src="https://github.com/alvaromrveiga/rpa-test/blob/main/assets/rpaTestHeadless.gif"/>
+  
+  <h3>Headful</h3>
+  <img src="https://github.com/alvaromrveiga/rpa-test/blob/main/assets/rpaTestHeadful.gif" />
+</p>
 
 ## 🔧 Instalação
 
