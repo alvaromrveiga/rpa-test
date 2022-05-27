@@ -20,7 +20,7 @@
 
   ```bash
     # Clona o projeto para sua máquina
-    git clone https://github.com/alvaromrveiga/ecommerce-backend
+    git clone https://github.com/alvaromrveiga/rpa-test
 
     # Entra na pasta do projeto
     cd rpa-test
