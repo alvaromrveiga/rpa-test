@@ -1,4 +1,5 @@
 import { By, Key, until, WebDriver, WebElement } from "selenium-webdriver";
+import fs from "fs";
 
 export async function screenshotMap(address: string, webDriver: WebDriver) {
   try {
@@ -10,9 +11,15 @@ export async function screenshotMap(address: string, webDriver: WebDriver) {
 
     const canvas = await getMapCanvas(webDriver);
 
+    await closeSideTab(webDriver);
+
     await waitCanvasFullyLoad(webDriver);
 
     await clickOnSatelliteViewButton(webDriver, canvas);
+
+    await waitMapFullyLoad(webDriver);
+
+    await takeAndSaveScreenshot(webDriver);
   } catch (error) {
     console.log(error);
   }
@@ -62,21 +69,12 @@ async function waitCanvasFullyLoad(driver: WebDriver) {
 }
 
 async function calculateSatelliteViewButtonPosition(
-  driver: WebDriver,
   canvas: WebElement
 ): Promise<{ satelliteButtonX: number; satelliteButtonY: number }> {
-  const placeInfoTab = await driver.findElement(
-    By.xpath("//div[@class='w6VYqd']")
-  );
-
-  const placeInfoTabWidth = (await placeInfoTab.getRect()).width;
-
   const canvasWidth: number = +(await canvas.getAttribute("width"));
   const canvasHeight: number = +(await canvas.getAttribute("height"));
 
-  const satelliteButtonX = Math.ceil(
-    0 - canvasWidth / 2 + placeInfoTabWidth + canvasWidth * 0.06
-  );
+  const satelliteButtonX = Math.ceil(0 - canvasWidth / 2 + canvasWidth * 0.06);
 
   const satelliteButtonY = Math.ceil(
     0 + canvasHeight / 2 - canvasHeight * 0.13
@@ -90,13 +88,41 @@ async function clickOnSatelliteViewButton(
   canvas: WebElement
 ) {
   const { satelliteButtonX, satelliteButtonY } =
-    await calculateSatelliteViewButtonPosition(driver, canvas);
+    await calculateSatelliteViewButtonPosition(canvas);
 
   const actions = driver.actions({ async: true });
   await actions
     .move({ origin: canvas, x: satelliteButtonX, y: satelliteButtonY })
     .click()
     .perform();
+}
+
+async function closeSideTab(driver: WebDriver) {
+  const sideTabButtonDiv = await driver
+    .findElement(By.xpath("//div[@class='gYkzb']"))
+    .click();
+
+  await waitCloseSideTabAnimation();
+}
+
+async function waitCloseSideTabAnimation() {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+}
+
+async function waitMapFullyLoad(driver: WebDriver) {
+  const mapImageCredits = await driver.findElement(
+    By.xpath("//span[@id='LFaNsb']")
+  );
+
+  const mapImageDefaultText = await mapImageCredits.getText();
+  const endsWithCommaDefaultTextRegex = new RegExp(
+    `.*\\, ${mapImageDefaultText}$`
+  );
+
+  await driver.wait(
+    until.elementTextMatches(mapImageCredits, endsWithCommaDefaultTextRegex),
+    10000
+  );
 }
 
 async function makeCanvasVisibleWhenHeadless(
@@ -109,5 +135,22 @@ async function makeCanvasVisibleWhenHeadless(
   await driver.executeScript(
     `arguments[0].setAttribute('style', '${canvasStyleDisplayInline}')`,
     canvas
+  );
+}
+
+async function takeAndSaveScreenshot(webDriver: WebDriver) {
+  const screenshot = await webDriver.takeScreenshot();
+
+  const screenshotName = new Date(Date.now())
+    .toLocaleDateString("pt-br", {
+      dateStyle: "short",
+      timeStyle: "medium",
+    })
+    .replace(/[\s\/]/g, "-");
+
+  await fs.writeFile(
+    `screenshots/${screenshotName}.png`,
+    Buffer.from(screenshot, "base64"),
+    () => {}
   );
 }
